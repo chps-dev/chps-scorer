@@ -340,7 +340,7 @@ check_recent_build() {
         
             # Get tags list and extract last updated date for our tag
             last_updated=$(curl -s "https://hub.docker.com/v2/repositories/$repo/tags/$tag" | jq -r '.last_updated')
-            echo "Last updated date: $last_updated" >&2
+            #echo "Last updated date: $last_updated" >&2
             if [ -n "$last_updated" ]; then
                 # Convert last updated date to timestamp
                 local update_timestamp
@@ -354,9 +354,7 @@ check_recent_build() {
                     last_updated=$(echo "$last_updated" | sed -E 's/([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}:[0-9]{2})\.[0-9]+Z/\1 \2/')
                     update_timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "$last_updated" +%s 2>/dev/null)
                 fi
-
-                echo "timestamp: $update_timestamp" >&2
-                
+ 
                 if [ -n "$update_timestamp" ] && [ "$update_timestamp" -gt 0 ]; then
                     if [ "$update_timestamp" -ge "$thirty_days_ago" ]; then
                         local days_old=$(( (current_time - update_timestamp) / 86400 ))
@@ -460,6 +458,9 @@ run_provenance_checks() {
 
     if [ -z "$dockerfile" ]; then
         # Skip Dockerfile checks but still increment score
+        echo -e "${YELLOW}✓ No Dockerfile provided, skipping digests in FROM statements check${NC}" >&2
+        echo -e "${YELLOW}✓ No Dockerfile provided, skipping pinned packages check${NC}" >&2
+
         ((provenance_score+=2))
         results+=("pinned_images:pass")
         results+=("pinned_packages:pass")
