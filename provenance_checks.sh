@@ -306,13 +306,16 @@ check_trusted_source() {
 
 # Function to check if image was built in the last 30 days
 check_recent_build() {
-    local image=$1
+    local image_sha=$1
+    local image=$ORIGINAL_IMAGE
     local current_time=$(date +%s)
     local thirty_days_ago=$((current_time - 2592000))  # 30 days in seconds
     
     # If this is a Docker Hub image, check the push date
-    if [[ "$image" != *"."* || "$image" == "docker.io/"* || "$image" == *"index.docker.io"* || "$image" =~ ^[^/]+/[^/]+$ || "$image" =~ ^[^/]+$ ]]; then
-        # Extract repo and tag for Docker Hub API
+    if [[ "$image" != *"."* || "$image" == "docker.io/"*  ]]; then
+        #echo "Have docker hub image" >&2
+        
+        # Remove docker.io/ and library/ from the image name
         local repo_tag="${image#docker.io/}"
         repo_tag="${repo_tag#library/}"
         
@@ -329,22 +332,14 @@ check_recent_build() {
             repo="library/$repo"
         fi
         
-        echo "Checking last updated date for Docker Hub image: $repo:$tag" >&2
+        #echo "Checking last updated date for Docker Hub image: $repo:$tag" >&2
         
         # Query Docker Hub API for last updated date
         local auth_token
         local last_updated
         
-        # Get auth token first
-        auth_token=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$repo:pull" | grep -o '"token":"[^"]*"' | cut -d':' -f2 | tr -d '"')
-        
-        if [ -z "$auth_token" ]; then
-            echo "Failed to get auth token for Docker Hub API" >&2
-            # Fall back to creation date method
-            echo "Falling back to image creation date check" >&2
-        else
             # Get tags list and extract last updated date for our tag
-            last_updated=$(curl -s -H "Authorization: Bearer $auth_token" "https://registry-1.docker.io/v2/$repo/tags/list" | grep -o "\"$tag\":{[^}]*\"last_updated\":\"[^\"]*\"" | grep -o '"last_updated":"[^"]*"' | cut -d':' -f2 | tr -d '"')
+            last_updated=$(curl -s "https://hub.docker.com/v2/repositories/$repo/tags/$tag" | jq -r '.last_updated')
             echo "Last updated date: $last_updated" >&2
             if [ -n "$last_updated" ]; then
                 # Convert last updated date to timestamp
@@ -359,6 +354,8 @@ check_recent_build() {
                     last_updated=$(echo "$last_updated" | sed -E 's/([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}:[0-9]{2})\.[0-9]+Z/\1 \2/')
                     update_timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "$last_updated" +%s 2>/dev/null)
                 fi
+
+                echo "timestamp: $update_timestamp" >&2
                 
                 if [ -n "$update_timestamp" ] && [ "$update_timestamp" -gt 0 ]; then
                     if [ "$update_timestamp" -ge "$thirty_days_ago" ]; then
@@ -372,7 +369,7 @@ check_recent_build() {
                     fi
                 fi
             fi
-        fi
+        
     fi
     
     # For non-Docker Hub images or if Docker Hub API fails, use creation date

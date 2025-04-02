@@ -74,6 +74,30 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
+# Function to generate badge URL
+get_badge_url() {
+    local label=$1
+    local grade=$2
+    local label_color="%233443F4"  # Blue label background
+    local color
+
+    # Set color based on grade
+    case $grade in
+        "A+") color="%2301A178";; # Green
+        "A")  color="%2304B45F";; # Light green
+        "B")  color="%23FFB000";; # Yellow
+        "C")  color="%23FF8C00";; # Orange
+        "D")  color="%23FF4400";; # Light red
+        "E")  color="%23FF0000";; # Red
+        *)    color="%23808080";; # Gray for unknown
+    esac
+
+    # URL encode the grade (replace + with %2B)
+    local encoded_grade=${grade//+/%2B}
+    
+    echo "https://img.shields.io/badge/${label}-${encoded_grade}-gold?style=flat-square&labelColor=${label_color}&color=${color}"
+}
+
 # Function to output scores in JSON format
 output_json() {
     local image=$1
@@ -96,6 +120,13 @@ output_json() {
     local provenance_grade=$(get_grade "$provenance_score" 8)
     local config_grade=$(get_grade "$config_score" 4)
     local cve_grade=$(get_grade "$cve_score" 4)
+
+    # Generate badge URLs
+    local overall_badge=$(get_badge_url "overall" "$grade")
+    local minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
+    local provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
+    local config_badge=$(get_badge_url "configuration" "$config_grade")
+    local cve_badge=$(get_badge_url "cves" "$cve_grade")
     
     cat << EOF
 {
@@ -106,24 +137,28 @@ output_json() {
             "score": $minimalism_score,
             "max": 4,
             "grade": "$minimalism_grade",
+            "badge": "$minimalism_badge",
             "checks": $(echo "$minimalism_json" | jq '.checks')
         },
         "provenance": {
             "score": $provenance_score,
             "max": 8,
             "grade": "$provenance_grade",
+            "badge": "$provenance_badge",
             "checks": $(echo "$provenance_json" | jq '.checks')
         },
         "configuration": {
             "score": $config_score,
             "max": 4,
             "grade": "$config_grade",
+            "badge": "$config_badge",
             "checks": $(echo "$config_json" | jq '.checks')
         },
         "cves": {
             "score": $cve_score,
             "max": 5,
             "grade": "$cve_grade",
+            "badge": "$cve_badge",
             "checks": $(echo "$cve_json" | jq '.checks')
         }
     },
@@ -131,7 +166,8 @@ output_json() {
         "score": $total_score,
         "max": $max_score,
         "percentage": $percentage,
-        "grade": "$grade"
+        "grade": "$grade",
+        "badge": "$overall_badge"
     }
 }
 EOF
