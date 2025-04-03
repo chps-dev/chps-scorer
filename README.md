@@ -10,10 +10,18 @@ git clone https://github.com/chps-dev/chps-scorer.git
 cd chps-scorer
 ```
 
-2. Make the scripts executable:
-```bash
-chmod +x *.sh
-```
+## Dependencies
+
+You will need the following software installed for full functionality. The scripts have been tested
+on MacOS, let me know of any issues running in Linux.
+
+- bash
+- Docker
+- jq (for JSON processing)
+- curl (for API requests)
+- [cosign](https://github.com/sigstore/cosign) (for signature verification)
+- [grype](https://github.com/anchore/grype) (optional, for CVE scanning)
+- [trufflehog](https://github.com/trufflesecurity/trufflehog) (for secret scanning)
 
 ## Usage
 
@@ -86,12 +94,4 @@ Example JSON output:
 }
 ```
 
-## Dependencies
-
-- Docker
-- jq (for JSON processing)
-- curl (for API requests)
-- cosign (for signature verification)
-- grype (optional, for CVE scanning)
-- trufflehog (for secret scanning)
 
