@@ -191,17 +191,32 @@ output_text() {
     local provenance_grade=$(get_grade "$provenance_score" 8)
     local config_grade=$(get_grade "$config_score" 4)
     local cve_grade=$(get_grade "$cve_score" 4)
+
+    # Generate badge URLs
+    local overall_badge=$(get_badge_url "overall" "$grade")
+    local minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
+    local provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
+    local config_badge=$(get_badge_url "configuration" "$config_grade")
+    local cve_badge=$(get_badge_url "cves" "$cve_grade")
     
     echo "Scoring image: $image"
     echo "Image digest: $digest"
     echo
     echo "Minimalism Score: $minimalism_score/4 ($minimalism_grade)"
+    echo "Badge URL: $minimalism_badge"
+    echo
     echo "Provenance Score: $provenance_score/8 ($provenance_grade)"
+    echo "Badge URL: $provenance_badge"
+    echo
     echo "Configuration Score: $config_score/4 ($config_grade)"
+    echo "Badge URL: $config_badge"
+    echo
     echo "CVE Score: $cve_score/4 ($cve_grade)"
+    echo "Badge URL: $cve_badge"
     echo
     echo "Overall Score: $total_score/$max_score ($percentage%)"
     echo "Grade: $grade"
+    echo "Overall Badge URL: $overall_badge"
 }
 
 # Main scoring function
