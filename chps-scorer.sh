@@ -98,6 +98,70 @@ get_badge_url() {
     echo "https://img.shields.io/badge/${label}-${encoded_grade}-gold?style=flat-square&labelColor=${label_color}&color=${color}"
 }
 
+# Function to check if curl exists
+check_curl() {
+    if ! command -v curl &> /dev/null; then
+        echo "curl is required for image display but not found" >&2
+        return 1
+    fi
+    return 0
+}
+
+# Function to detect terminal image support
+detect_term_img_support() {
+    # Check for iTerm2
+    if [[ -n "$ITERM_SESSION_ID" ]]; then
+        if [[ -n "$TERM_PROGRAM_VERSION" ]]; then
+            echo "iterm"
+            return 0
+        fi
+    fi
+    
+    # Check for Kitty
+    if [[ -n "$KITTY_WINDOW_ID" ]]; then
+        echo "kitty"
+        return 0
+    fi
+
+    # Check for terminals that support sixel
+    if [[ "$TERM" =~ "xterm" ]] && command -v img2sixel &> /dev/null; then
+        echo "sixel"
+        return 0
+    fi
+
+    echo "none"
+    return 1
+}
+
+# Function to display image in terminal
+display_badge() {
+    local url="$1"
+    local term_type="$2"
+    local tmp_file="/tmp/chps-badge-$RANDOM.png"
+
+    # Download the badge
+    if ! curl -s "$url" -o "$tmp_file"; then
+        echo "Failed to download badge" >&2
+        return 1
+    fi
+
+    case "$term_type" in
+        "iterm")
+            printf '\033]1337;File=inline=1;width=auto;height=auto:'
+            base64 < "$tmp_file"
+            printf '\a\n'
+            ;;
+        "kitty")
+            kitty +kitten icat "$tmp_file"
+            ;;
+        "sixel")
+            img2sixel "$tmp_file"
+            ;;
+    esac
+
+    rm -f "$tmp_file"
+}
+
 # Function to output scores in JSON format
 output_json() {
     local image=$1
@@ -198,25 +262,72 @@ output_text() {
     local provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
     local config_badge=$(get_badge_url "configuration" "$config_grade")
     local cve_badge=$(get_badge_url "cves" "$cve_grade")
+
+    # Check for terminal image support
+    local term_support
+    term_support=$(detect_term_img_support)
+    local can_show_images=false
+    
+    if [[ "$term_support" != "none" ]] && check_curl; then
+        can_show_images=true
+    fi
     
     echo "Scoring image: $image"
     echo "Image digest: $digest"
     echo
+
     echo "Minimalism Score: $minimalism_score/4 ($minimalism_grade)"
-    echo "Badge URL: $minimalism_badge"
+    if [[ "$can_show_images" == "true" ]]; then
+        display_badge "$minimalism_badge" "$term_support"
+    else
+        echo "![Minimalism Badge]($minimalism_badge)"
+    fi
     echo
+
     echo "Provenance Score: $provenance_score/8 ($provenance_grade)"
-    echo "Badge URL: $provenance_badge"
+    if [[ "$can_show_images" == "true" ]]; then
+        display_badge "$provenance_badge" "$term_support"
+    else
+        echo "![Provenance Badge]($provenance_badge)"
+    fi
     echo
+
     echo "Configuration Score: $config_score/4 ($config_grade)"
-    echo "Badge URL: $config_badge"
+    if [[ "$can_show_images" == "true" ]]; then
+        display_badge "$config_badge" "$term_support"
+    else
+        echo "![Configuration Badge]($config_badge)"
+    fi
     echo
+
     echo "CVE Score: $cve_score/4 ($cve_grade)"
-    echo "Badge URL: $cve_badge"
+    if [[ "$can_show_images" == "true" ]]; then
+        display_badge "$cve_badge" "$term_support"
+    else
+        echo "![CVE Badge]($cve_badge)"
+    fi
     echo
+
     echo "Overall Score: $total_score/$max_score ($percentage%)"
     echo "Grade: $grade"
-    echo "Overall Badge URL: $overall_badge"
+    if [[ "$can_show_images" == "true" ]]; then
+        display_badge "$overall_badge" "$term_support"
+    else
+        echo "![Overall Badge]($overall_badge)"
+    fi
+    echo
+
+    if [[ "$can_show_images" == "false" ]]; then
+        echo "Note: Badge URLs are formatted in Markdown. To view badges:"
+        echo "1. Copy the output to a Markdown file, or"
+        echo "2. Visit the URLs directly in a web browser"
+        echo
+        echo "To enable terminal image display, install one of the following:"
+        echo "- iTerm2 terminal"
+        echo "- Kitty terminal"
+        echo "- A terminal with Sixel support and img2sixel"
+        echo "And ensure curl is installed."
+    fi
 }
 
 # Main scoring function
