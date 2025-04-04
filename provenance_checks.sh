@@ -458,7 +458,7 @@ run_provenance_checks() {
         results+=("recent_build:fail")
     fi
 
-    if [ -z "$dockerfile" ]; then
+    if [ x"$dockerfile" = x ]; then
         # Skip Dockerfile checks but still increment score
         echo -e "${YELLOW}✓ No Dockerfile provided, skipping digests in FROM statements check${NC}" >&2
         echo -e "${YELLOW}✓ No Dockerfile provided, skipping pinned packages check${NC}" >&2
@@ -467,7 +467,7 @@ run_provenance_checks() {
         results+=("pinned_images:pass")
         results+=("pinned_packages:pass")
     else
-        if check_pinned_images "$dockerfile"; then
+        if check_pinned_images "$image" "$dockerfile"; then
             echo -e "${GREEN}✓ Uses digests in FROM statements (Level 2)${NC}" >&2
             ((provenance_score++))
             results+=("pinned_images:pass")
@@ -476,7 +476,7 @@ run_provenance_checks() {
             results+=("pinned_images:fail")
         fi
 
-        if check_pinned_packages "$dockerfile"; then
+        if check_pinned_packages "$image" "$dockerfile"; then
             echo -e "${GREEN}✓ Uses pinned packages (Level 2)${NC}" >&2
             ((provenance_score++))
             results+=("pinned_packages:pass")
