@@ -147,14 +147,17 @@ display_badge() {
 
     case "$term_type" in
         "iterm")
+            # For iTerm2, we can specify width in pixels or cells
             printf '\033]1337;File=inline=1;width=auto;height=auto:'
             base64 < "$tmp_file"
             printf '\a\n'
             ;;
         "kitty")
-            kitty +kitten icat "$tmp_file"
+            # For Kitty, we can specify scale factor
+            kitty +kitten icat --scale-up --transfer-mode=file --align=left "$tmp_file"
             ;;
         "sixel")
+            # For Sixel, we can specify width
             img2sixel "$tmp_file"
             ;;
     esac

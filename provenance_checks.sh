@@ -61,8 +61,10 @@ check_sbom() {
         if [ "$(docker buildx imagetools inspect --format '{{ json .SBOM.SPDX }}' "$image")" != "null" ]; then
             has_sbom=1
             # if it's a multi-arch image, let's assume there is a linux/amd64 SBOM
-        elif [ "$(docker buildx imagetools inspect --format '{{ json (index .SBOM "linux/amd64").SPDX }}' "$image")" != "null" ]; then
+        elif [ docker buildx imagetools inspect --format '{{ json (index .SBOM "linux/amd64").SPDX }}' "$image" > /dev/null 2>&1 ]; then
+            if [ "$(docker buildx imagetools inspect --format '{{ json (index .SBOM "linux/amd64").SPDX }}' "$image")" != "null" ]; then
             has_sbom=1
+            fi
         fi
     fi
     if [ $has_sbom -eq 1 ]; then
