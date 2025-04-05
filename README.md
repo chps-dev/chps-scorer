@@ -23,6 +23,11 @@ on MacOS, let me know of any issues running in Linux.
 - [grype](https://github.com/anchore/grype) (optional, for CVE scanning)
 - [trufflehog](https://github.com/trufflesecurity/trufflehog) (for secret scanning)
 
+## Where's the Container?
+
+Yes, this should be packaged in a container so you don't have to deal with all the
+dependencies. And then it can grade itself! I'm working on it...
+
 ## Usage
 
 Basic usage:
