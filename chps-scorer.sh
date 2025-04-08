@@ -319,18 +319,6 @@ output_text() {
         echo "![Overall Badge]($overall_badge)"
     fi
     echo
-
-    if [[ "$can_show_images" == "false" ]]; then
-        echo "Note: Badge URLs are formatted in Markdown. To view badges:"
-        echo "1. Copy the output to a Markdown file, or"
-        echo "2. Visit the URLs directly in a web browser"
-        echo
-        echo "To enable terminal image display, install one of the following:"
-        echo "- iTerm2 terminal"
-        echo "- Kitty terminal"
-        echo "- A terminal with Sixel support and img2sixel"
-        echo "And ensure curl is installed."
-    fi
 }
 
 # Main scoring function

@@ -386,11 +386,12 @@ check_recent_build() {
         created_date=${created_date%Z}
     fi
     
-    # Try different date parsing approaches based on OS
-    local created_timestamp=0
-    
+    # Try BusyBox date first
+    if date --help 2>&1 | grep -q "BusyBox"; then
+        # BusyBox date uses -D for input format
+        created_timestamp=$(date -D "%Y-%m-%dT%H:%M:%S" -d "$created_date" +%s 2>/dev/null)
     # Try GNU date (Linux)
-    if date --version >/dev/null 2>&1; then
+    elif date --version >/dev/null 2>&1; then
         created_timestamp=$(date -d "$created_date" +%s 2>/dev/null)
     else
         # Try BSD date (macOS)
