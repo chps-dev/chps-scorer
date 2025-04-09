@@ -4,16 +4,17 @@ This tool implements automated checks for the [CHPs specification](https://githu
 
 ## Installation
 
-1. Clone the repository:
-```bash
-git clone https://github.com/chps-dev/chps-scorer.git
-cd chps-scorer
+As the scorer has several requirements and is at its heart a funky bash script, it's best to run
+using the container image i.e:
+
+```
+docker run ghcr.io/chps-dev/chps-scorer:latest <image_to_scan>
 ```
 
 ## Dependencies
 
-You will need the following software installed for full functionality. The scripts have been tested
-on MacOS, let me know of any issues running in Linux.
+If you want to run the script locally, you will need the following software installed for full
+functionality. The scripts have been tested on MacOS, let me know of any issues running in Linux.
 
 - bash
 - Docker
@@ -23,10 +24,6 @@ on MacOS, let me know of any issues running in Linux.
 - [grype](https://github.com/anchore/grype) (optional, for CVE scanning)
 - [trufflehog](https://github.com/trufflesecurity/trufflehog) (for secret scanning)
 
-## Where's the Container?
-
-Yes, this should be packaged in a container so you don't have to deal with all the
-dependencies. And then it can grade itself! I'm working on it...
 
 ## Usage
 
