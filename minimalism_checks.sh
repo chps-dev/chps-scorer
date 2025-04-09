@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Copyright 2025 The CHPs-dev Authors
+# SPDX-License-Identifier: Apache-2.0
 
 # Function to check for shell
 check_shell() {
@@ -61,7 +64,7 @@ check_build_tooling() {
 check_minimal_base() {
     local image=$1
     local dockerfile=$2
-    
+
     # If Dockerfile is provided, check the final FROM statement (normally production build)
     if [ -n "$dockerfile" ]; then
         local base_image=$(grep -i "^FROM" "$dockerfile" | tail -n1 | awk '{print $2}')
@@ -70,10 +73,10 @@ check_minimal_base() {
             return 0
         fi
     fi
-    
+
     # Fall back to size check
     local size_bytes=$(docker inspect -f "{{ .Size }}" "$image")
-    
+
     if [ "$size_bytes" -lt 40000000 ]; then
         echo "Compressed image is $size_bytes bytes, assuming minimal base image" >&2
         return 0
@@ -87,7 +90,7 @@ run_minimalism_checks() {
     local dockerfile=$2
     local minimalism_score=0
     local results=()
-    
+
     echo -e "\nChecking Minimalism criteria..." >&2
 
     if check_minimal_base "$image" "$dockerfile"; then
@@ -143,4 +146,4 @@ run_minimalism_checks() {
     done
     echo "  }"
     echo "}"
-} 
+}

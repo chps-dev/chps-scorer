@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Copyright 2025 The CHPs-dev Authors
+# SPDX-License-Identifier: Apache-2.0
 
 # Function to check if user is root
 check_root_user() {
@@ -32,19 +35,19 @@ check_secrets() {
     local image=$1
     local dockerfile=$2
     local found_secrets=0
-    
+
     echo "Checking for secrets using Trufflehog..." >&2
-    
+
     # First try using local Trufflehog if available
     if command -v trufflehog >/dev/null 2>&1; then
         echo "Using local Trufflehog installation..." >&2
-        
+
         # Check Docker image
         if trufflehog docker --image "$image" --only-verified 2>/dev/null | grep -q "Found"; then
             found_secrets=1
             echo -e "${RED}✗ Trufflehog found verified secrets in the image${NC}" >&2
         fi
-        
+
         # Check Dockerfile if provided
         if [ -n "$dockerfile" ] && [ -f "$dockerfile" ]; then
             if trufflehog filesystem --directory="$(dirname "$(realpath "$dockerfile")")" --only-verified 2>/dev/null | grep -q "Found"; then
@@ -52,28 +55,28 @@ check_secrets() {
                 echo -e "${RED}✗ Trufflehog found verified secrets in the Dockerfile${NC}" >&2
             fi
         fi
-        
+
         if [ $found_secrets -eq 1 ]; then
             return 1
         fi
         return 0
     fi
-    
+
     # Fall back to Docker version if local Trufflehog not available
     echo "Local Trufflehog not found, using Docker version..." >&2
-    
+
     # Check if Docker is available
     if ! command -v docker >/dev/null 2>&1; then
         echo "Neither local Trufflehog nor Docker is available. Cannot run secret scanning." >&2
         return 1
     fi
-    
+
     # Pull the Trufflehog Docker image
     if ! docker pull trufflesecurity/trufflehog:latest >/dev/null 2>&1; then
         echo "Failed to pull Trufflehog Docker image. Skipping secret scanning." >&2
         return 1
     fi
-    
+
     # Run Trufflehog directly against the Docker image
     if docker run --rm \
         --volume /var/run/docker.sock:/var/run/docker.sock \
@@ -82,7 +85,7 @@ check_secrets() {
         found_secrets=1
         echo -e "${RED}✗ Trufflehog found verified secrets in the image${NC}" >&2
     fi
-    
+
     # Also check Dockerfile if provided
     if [ -n "$dockerfile" ] && [ -f "$dockerfile" ]; then
         if docker run --rm -v "$(dirname "$(realpath "$dockerfile")"):/data" \
@@ -92,11 +95,11 @@ check_secrets() {
             echo -e "${RED}✗ Trufflehog found verified secrets in the Dockerfile${NC}" >&2
         fi
     fi
-    
+
     if [ $found_secrets -eq 1 ]; then
         return 1
     fi
-    
+
     return 0
 }
 
@@ -107,7 +110,7 @@ check_annotations() {
     if docker inspect "$image" | jq '.[].Config.Labels | with_entries(select(.key | startswith("org.opencontainers.image")))' >/dev/null 2>&1; then
         return 0
     fi
-    
+
     return 1
 }
 
@@ -158,7 +161,7 @@ run_config_checks() {
         echo -e "${RED}✗ No annotations found${NC}" >&2
         results+=("annotations:fail")
     fi
-    
+
     echo -e "${YELLOW}✓ Not practical to check for security profiles (Level 5)${NC}" >&2
     results+=("security_profiles:skip")
 
@@ -179,4 +182,4 @@ run_config_checks() {
     done
     echo "  }"
     echo "}"
-} 
+}
