@@ -5,11 +5,11 @@ on:
 
 jobs:
   docker:
-    permissions: # needed for signing and attestations
+    permissions:
      id-token: write # write seems weird, but it is correct per docs
-     attestations: write
+     attestations: write 
      contents: read
-     packages: write
+     packages: write # for pushing to ghcr
 
     runs-on: ubuntu-latest
 
@@ -38,8 +38,10 @@ jobs:
           images: |
             ghcr.io/chps-dev/chps-scorer
           labels: |
-            org.opencontainers.image.description=CHPs Scorer
+            org.opencontainers.image.description="CHPs Scorer"
             org.opencontainers.image.source="https://github.com/chps-dev/chps-scorer"
+          tag : |
+            type=raw,value=latest,enable={{is_default_branch}}
       -
         name: Build and push
         id: build
