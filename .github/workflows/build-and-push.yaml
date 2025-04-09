@@ -9,6 +9,7 @@ jobs:
      id-token: write # write seems weird, but it is correct per docs
      attestations: write
      contents: read
+     packages: write
 
     runs-on: ubuntu-latest
 
