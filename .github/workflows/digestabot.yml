@@ -25,7 +25,7 @@ jobs:
         scope: ${{ github.repository }}
         identity: digestabot
 
-    - uses: chainguard-dev/digestabot@cee67ce333549107c469dbe7656afda5a1e1f287 # v1.2.1
+    - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
       with:
         token: ${{ steps.octo-sts.outputs.token }}
         author: "octo-sts[bot] <157150467+octo-sts[bot]@users.noreply.github.com>"
