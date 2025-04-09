@@ -2,6 +2,8 @@ name: Build, Sign and Push CHPs Scorer Image
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   docker:
