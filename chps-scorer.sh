@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Copyright 2025 The CHPs-dev Authors
+# SPDX-License-Identifier: Apache-2.0
 
 # CHPs Scorer - Container Hardening Priorities Scoring Tool
 # This script evaluates Docker images against the CHPs criteria
@@ -16,7 +19,7 @@ get_grade() {
     local score=$1
     local max_score=$2
     local percentage=$((score * 100 / max_score))
-    
+
     if [ $score -eq 0 ]; then
         echo "E"
     elif [ $score -eq $max_score ]; then
@@ -94,7 +97,7 @@ get_badge_url() {
 
     # URL encode the grade (replace + with %2B)
     local encoded_grade=${grade//+/%2B}
-    
+
     echo "https://img.shields.io/badge/${label}-${encoded_grade}-gold?style=flat-square&labelColor=${label_color}&color=${color}"
 }
 
@@ -116,7 +119,7 @@ detect_term_img_support() {
             return 0
         fi
     fi
-    
+
     # Check for Kitty
     if [[ -n "$KITTY_WINDOW_ID" ]]; then
         echo "kitty"
@@ -181,7 +184,7 @@ output_json() {
     local provenance_json=${12}
     local config_json=${13}
     local cve_json=${14}
-    
+
     # Calculate individual section grades
     local minimalism_grade=$(get_grade "$minimalism_score" 4)
     local provenance_grade=$(get_grade "$provenance_score" 8)
@@ -194,7 +197,7 @@ output_json() {
     local provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
     local config_badge=$(get_badge_url "configuration" "$config_grade")
     local cve_badge=$(get_badge_url "cves" "$cve_grade")
-    
+
     cat << EOF
 {
     "image": "$image",
@@ -252,7 +255,7 @@ output_text() {
     local max_score=$8
     local percentage=$9
     local grade=${10}
-    
+
     # Calculate individual section grades
     local minimalism_grade=$(get_grade "$minimalism_score" 4)
     local provenance_grade=$(get_grade "$provenance_score" 8)
@@ -270,11 +273,11 @@ output_text() {
     local term_support
     term_support=$(detect_term_img_support)
     local can_show_images=false
-    
+
     if [[ "$term_support" != "none" ]] && check_curl; then
         can_show_images=true
     fi
-    
+
     echo "Scoring image: $image"
     echo "Image digest: $digest"
     echo
@@ -325,13 +328,13 @@ output_text() {
 score_image() {
     local image=$1
     local dockerfile=$2
-    
+
     echo "Scoring image: $image" >&2
     if [ -n "$dockerfile" ]; then
         echo "Using Dockerfile: $dockerfile" >&2
     fi
     echo "----------------------------------------" >&2
-    
+
     # Run minimalism checks
     minimalism_json=$(run_minimalism_checks "$image" "$dockerfile")
     minimalism_score=$(echo "$minimalism_json" | jq -r '.score')
@@ -357,18 +360,18 @@ score_image() {
     local total_score=$((minimalism_score + config_score + provenance_score + cve_score))
     local max_score=20  # Updated max score (4 + 4 + 8 + 4)
     local percentage=$((total_score * 100 / max_score))
-    
+
     # Determine grade based on percentage
     local grade
-    if [ $percentage -ge 94 ]; then  # 17-18 points 
+    if [ $percentage -ge 94 ]; then  # 17-18 points
         grade="A+"
-    elif [ $percentage -ge 75 ]; then  # 14-16 points 
+    elif [ $percentage -ge 75 ]; then  # 14-16 points
         grade="A"
-    elif [ $percentage -ge 56 ]; then  # 11-13 points 
+    elif [ $percentage -ge 56 ]; then  # 11-13 points
         grade="B"
-    elif [ $percentage -ge 38 ]; then  # 8-10 points 
+    elif [ $percentage -ge 38 ]; then  # 8-10 points
         grade="C"
-    elif [ $percentage -ge 19 ]; then  # 5-7 points 
+    elif [ $percentage -ge 19 ]; then  # 5-7 points
         grade="D"
     else  # 0-4 points (Level None)
         grade="E"

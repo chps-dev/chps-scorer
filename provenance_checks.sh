@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Copyright 2025 The CHPs-dev Authors
+# SPDX-License-Identifier: Apache-2.0
 
 # Function to check if image is signed
 check_image_is_signed() {
@@ -79,11 +82,11 @@ check_sbom() {
 check_pinned_images() {
     local image=$1
     local dockerfile=$2
-    
+
     # If Dockerfile is provided, check FROM statements in it
     if [ -n "$dockerfile" ]; then
         local unpinned_refs=$(grep -i "^FROM" "$dockerfile" | grep -v '@sha256:')
-        
+
         if [ -n "$unpinned_refs" ]; then
             echo "Found unpinned image references in Dockerfile:" >&2
             echo "$unpinned_refs" | while read -r line; do
@@ -97,7 +100,7 @@ check_pinned_images() {
         echo -e "${YELLOW}No Dockerfile provided, skipping pinned image check${NC}" >&2
         return 0
     fi
-    
+
 }
 
 # Function to check for pinned packages
@@ -176,7 +179,7 @@ check_attestations() {
 
     # Check for Cosign attestations
     if command_exists cosign; then
-        # Check for SLSA provenance attestations with specific predicate type 
+        # Check for SLSA provenance attestations with specific predicate type
         if cosign verify-attestation \
             --type slsaprovenance1 \
             --certificate-identity-regexp=".*" \
@@ -201,7 +204,7 @@ check_attestations() {
     if [ $has_attestations -eq 0 ]; then
         if [ "$(docker buildx imagetools inspect --format '{{ json .Provenance.SLSA }}' "$image")" != "null" ]; then
             has_attestations=1
-            # if it's a multi-arch image, let's assume there is linux/amd64 
+            # if it's a multi-arch image, let's assume there is linux/amd64
         elif [ "$(docker buildx imagetools inspect --format '{{ json (index .Provenance "linux/amd64").SLSA }}' "$image")" != "null" ]; then
             has_attestations=1
         fi
@@ -219,12 +222,12 @@ check_attestations() {
 check_download_verification() {
     local image=$1
     local dockerfile=$2
-    
+
     # If Dockerfile is provided, check it
     if [ -n "$dockerfile" ]; then
         local has_downloads=0
         local has_verification=0
-        
+
         # Read the Dockerfile and check for downloads and verification
         while IFS= read -r line; do
             if echo "$line" | grep -iE 'wget|curl' >/dev/null; then
@@ -234,7 +237,7 @@ check_download_verification() {
                 has_verification=1
             fi
         done < "$dockerfile"
-        
+
         # If we found downloads in Dockerfile, check for verification
         if [ $has_downloads -eq 1 ]; then
             if [ $has_verification -eq 1 ]; then
@@ -247,20 +250,20 @@ check_download_verification() {
         # If no downloads found in Dockerfile, that's good
         return 0
     fi
-    
-    # Fall back to checking docker history if no Dockerfile 
+
+    # Fall back to checking docker history if no Dockerfile
     local history=$(docker history --no-trunc "$image" --format '{{.CreatedBy}}')
-    
+
     # First check if there are any downloads at all
     if ! echo "$history" | grep -iE 'wget|curl' >/dev/null; then
         return 0  # No downloads found, so verification is not needed
     fi
-    
+
     # If we found downloads, check for any verification commands
     if echo "$history" | grep -iE 'gpg|md5sum|sha256sum|sha512sum' >/dev/null; then
         return 0  # Found verification commands
     fi
-    
+
     # We found downloads but no verification
     echo "Found download commands but no verification commands in image history" >&2
     return 1
@@ -289,7 +292,7 @@ check_trusted_source() {
         # Check if base image has a domain name (contains a dot) or is from a user repository
         # Extract everything before first slash (or full string if no slash)
         local prefix=${base_image%%/*}
-        
+
         if [[ "$prefix" =~ \. ]]; then
             # Has domain name before slash, consider trusted
             return 0
@@ -312,41 +315,41 @@ check_recent_build() {
     local image=$ORIGINAL_IMAGE
     local current_time=$(date +%s)
     local thirty_days_ago=$((current_time - 2592000))  # 30 days in seconds
-    
+
     # If this is a Docker Hub image, check the push date
     if [[ "$image" != *"."* || "$image" == "docker.io/"*  ]]; then
         #echo "Have docker hub image" >&2
-        
+
         # Remove docker.io/ and library/ from the image name
         local repo_tag="${image#docker.io/}"
         repo_tag="${repo_tag#library/}"
-        
+
         # Handle images without tags (default to 'latest')
         if [[ "$repo_tag" != *":"* ]]; then
             repo_tag="${repo_tag}:latest"
         fi
-        
+
         local repo="${repo_tag%:*}"
         local tag="${repo_tag##*:}"
-        
+
         # Handle official images (library/...)
         if [[ ! "$repo" =~ "/" ]]; then
             repo="library/$repo"
         fi
-        
+
         #echo "Checking last updated date for Docker Hub image: $repo:$tag" >&2
-        
+
         # Query Docker Hub API for last updated date
         local auth_token
         local last_updated
-        
+
             # Get tags list and extract last updated date for our tag
             last_updated=$(curl -s "https://hub.docker.com/v2/repositories/$repo/tags/$tag" | jq -r '.last_updated')
             #echo "Last updated date: $last_updated" >&2
             if [ -n "$last_updated" ]; then
                 # Convert last updated date to timestamp
                 local update_timestamp
-                
+
                 # Try GNU date (Linux)
                 if date --version >/dev/null 2>&1; then
                     update_timestamp=$(date -d "$last_updated" +%s 2>/dev/null)
@@ -356,7 +359,7 @@ check_recent_build() {
                     last_updated=$(echo "$last_updated" | sed -E 's/([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}:[0-9]{2})\.[0-9]+Z/\1 \2/')
                     update_timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "$last_updated" +%s 2>/dev/null)
                 fi
- 
+
                 if [ -n "$update_timestamp" ] && [ "$update_timestamp" -gt 0 ]; then
                     if [ "$update_timestamp" -ge "$thirty_days_ago" ]; then
                         local days_old=$(( (current_time - update_timestamp) / 86400 ))
@@ -369,23 +372,23 @@ check_recent_build() {
                     fi
                 fi
             fi
-        
+
     fi
-    
+
     # For non-Docker Hub images or if Docker Hub API fails, use creation date
     local created_date=$(docker inspect --format '{{.Created}}' "$image" 2>/dev/null)
-    
+
     if [ -z "$created_date" ]; then
         echo "Failed to get image creation date" >&2
         return 1
     fi
-    
+
     # Extract the date portion for safer parsing
     created_date=${created_date%%.*}
     if [[ "$created_date" == *Z ]]; then
         created_date=${created_date%Z}
     fi
-    
+
     # Try BusyBox date first
     if date --help 2>&1 | grep -q "BusyBox"; then
         # BusyBox date uses -D for input format
@@ -397,12 +400,12 @@ check_recent_build() {
         # Try BSD date (macOS)
         created_timestamp=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$created_date" +%s 2>/dev/null)
     fi
-    
+
     if [ -z "$created_timestamp" ] || [ "$created_timestamp" -eq 0 ]; then
         echo "Unable to parse image creation date: $created_date" >&2
         return 1
     fi
-    
+
     if [ "$created_timestamp" -ge "$thirty_days_ago" ]; then
         local days_old=$(( (current_time - created_timestamp) / 86400 ))
         echo "Image was built $days_old days ago (within last 30 days)" >&2
@@ -420,7 +423,7 @@ run_provenance_checks() {
     local dockerfile=$2
     local provenance_score=0
     local results=()
-    
+
     echo -e "\nChecking Provenance criteria..." >&2
 
     if check_trusted_source "$image" "$dockerfile"; then
@@ -522,4 +525,4 @@ run_provenance_checks() {
     done
     echo "  }"
     echo "}"
-} 
+}
