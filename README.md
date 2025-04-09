@@ -8,8 +8,10 @@ As the scorer has several requirements and is at its heart a funky bash script, 
 using the container image i.e:
 
 ```
-docker run ghcr.io/chps-dev/chps-scorer:latest <image_to_scan>
+docker run --privileged ghcr.io/chps-dev/chps-scorer:latest <image_to_scan>
 ```
+
+Unfortunately, the `--privileged` is required as we're using docker-in-docker.
 
 ## Dependencies
 
