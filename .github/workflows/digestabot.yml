@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: read # the read the repo
       id-token: write # used to sign the commits using gitsign
+      pull-requests: write # to add labels to prs
 
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
