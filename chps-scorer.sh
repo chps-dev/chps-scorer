@@ -33,7 +33,7 @@ get_grade() {
         echo "E"
     elif [ "$score" -eq "$max_score" ]; then
         echo "A+"
-    elif [ "$percentage" -ge 75 ]; then
+    elif [ $percentage -ge 75 ]; then
         echo "A"
     elif [ $percentage -ge 50 ]; then
         echo "B"
