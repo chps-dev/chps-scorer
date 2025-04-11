@@ -10,7 +10,16 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BOLD='\033[1m'
 NC='\033[0m' # No Color
+
+# Grade colors
+A_PLUS_COLOR='\033[1;32m'  # Bright green
+A_COLOR='\033[0;32m'       # Green
+B_COLOR='\033[1;33m'       # Bright yellow
+C_COLOR='\033[0;33m'       # Yellow
+D_COLOR='\033[0;31m'       # Red
+E_COLOR='\033[1;31m'       # Bright red
 
 # Function to calculate grade based on score
 get_grade() {
@@ -168,6 +177,20 @@ display_badge() {
     rm -f "$tmp_file"
 }
 
+# Function to get grade color
+get_grade_color() {
+    local grade=$1
+    case $grade in
+        "A+") echo -e "${A_PLUS_COLOR}";;
+        "A")  echo -e "${A_COLOR}";;
+        "B")  echo -e "${B_COLOR}";;
+        "C")  echo -e "${C_COLOR}";;
+        "D")  echo -e "${D_COLOR}";;
+        "E")  echo -e "${E_COLOR}";;
+        *)    echo -e "${NC}";;
+    esac
+}
+
 # Function to output scores in JSON format
 output_json() {
     local image=$1
@@ -255,7 +278,7 @@ output_text() {
     local max_score=$8
     local percentage=$9
     local grade=${10}
-
+    
     # Calculate individual section grades
     local minimalism_grade=$(get_grade "$minimalism_score" 4)
     local provenance_grade=$(get_grade "$provenance_score" 8)
@@ -273,16 +296,16 @@ output_text() {
     local term_support
     term_support=$(detect_term_img_support)
     local can_show_images=false
-
+    
     if [[ "$term_support" != "none" ]] && check_curl; then
         can_show_images=true
     fi
-
-    echo "Scoring image: $image"
-    echo "Image digest: $digest"
+    
+    echo -e "${BOLD}Scoring image:${NC} $image"
+    echo -e "${BOLD}Image digest:${NC} $digest"
     echo
 
-    echo "Minimalism Score: $minimalism_score/4 ($minimalism_grade)"
+    echo -e "${BOLD}Minimalism Score:${NC} $minimalism_score/4 $(get_grade_color "$minimalism_grade")($minimalism_grade)${NC}"
     if [[ "$can_show_images" == "true" ]]; then
         display_badge "$minimalism_badge" "$term_support"
     else
@@ -290,7 +313,7 @@ output_text() {
     fi
     echo
 
-    echo "Provenance Score: $provenance_score/8 ($provenance_grade)"
+    echo -e "${BOLD}Provenance Score:${NC} $provenance_score/8 $(get_grade_color "$provenance_grade")($provenance_grade)${NC}"
     if [[ "$can_show_images" == "true" ]]; then
         display_badge "$provenance_badge" "$term_support"
     else
@@ -298,7 +321,7 @@ output_text() {
     fi
     echo
 
-    echo "Configuration Score: $config_score/4 ($config_grade)"
+    echo -e "${BOLD}Configuration Score:${NC} $config_score/4 $(get_grade_color "$config_grade")($config_grade)${NC}"
     if [[ "$can_show_images" == "true" ]]; then
         display_badge "$config_badge" "$term_support"
     else
@@ -306,7 +329,7 @@ output_text() {
     fi
     echo
 
-    echo "CVE Score: $cve_score/4 ($cve_grade)"
+    echo -e "${BOLD}CVE Score:${NC} $cve_score/4 $(get_grade_color "$cve_grade")($cve_grade)${NC}"
     if [[ "$can_show_images" == "true" ]]; then
         display_badge "$cve_badge" "$term_support"
     else
@@ -314,8 +337,8 @@ output_text() {
     fi
     echo
 
-    echo "Overall Score: $total_score/$max_score ($percentage%)"
-    echo "Grade: $grade"
+    echo -e "${BOLD}Overall Score:${NC} $total_score/$max_score ($percentage%)"
+    echo -e "${BOLD}Grade:${NC} $(get_grade_color "$grade")$grade${NC}"
     if [[ "$can_show_images" == "true" ]]; then
         display_badge "$overall_badge" "$term_support"
     else
