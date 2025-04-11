@@ -81,8 +81,6 @@ check_minimal_base() {
         aarch64) arch="arm64" ;;
     esac
     local size_bytes=$(crane manifest --platform linux/${arch} "$image" | jq '.config.size + ([.layers[].size] | add)')
-    
-    echo "Size of image: $size_bytes" >&2
 
     if [ "$size_bytes" -lt 40000000 ]; then
         echo "Compressed image is $size_bytes bytes, assuming minimal base image" >&2
