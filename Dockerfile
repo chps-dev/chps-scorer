@@ -5,7 +5,7 @@ FROM cgr.dev/chainguard/docker-dind:latest-dev@sha256:1006e2e8fff256434043d04a10
 
 LABEL org.opencontainers.image.source="https://github.com/chps-dev/chps-scorer"
 
-RUN apk add trufflehog jq curl cosign grype
+RUN apk add trufflehog jq curl cosign grype crane
 COPY *.sh .
 
 ENTRYPOINT ["/entrypoint.sh"]
