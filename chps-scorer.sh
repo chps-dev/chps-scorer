@@ -29,11 +29,11 @@ get_grade() {
     local max_score=$2
     local percentage=$((score * 100 / max_score))
 
-    if [ $score -eq 0 ]; then
+    if [ "$score" -eq 0 ]; then
         echo "E"
-    elif [ $score -eq $max_score ]; then
+    elif [ "$score" -eq "$max_score" ]; then
         echo "A+"
-    elif [ $percentage -ge 75 ]; then
+    elif [ "$percentage" -ge 75 ]; then
         echo "A"
     elif [ $percentage -ge 50 ]; then
         echo "B"
