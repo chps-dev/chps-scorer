@@ -22,6 +22,7 @@ functionality. The scripts have been tested on MacOS, let me know of any issues 
 - Docker
 - jq (for JSON processing)
 - curl (for API requests)
+- [crane](https://github.com/google/go-containerregistry/tree/main/cmd/crane) (for size check)
 - [cosign](https://github.com/sigstore/cosign) (for signature verification)
 - [grype](https://github.com/anchore/grype) (optional, for CVE scanning)
 - [trufflehog](https://github.com/trufflesecurity/trufflehog) (for secret scanning)
