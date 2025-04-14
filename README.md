@@ -2,6 +2,10 @@
 
 This tool implements automated checks for the [CHPs specification](https://github.com/chps-dev/chps).
 
+<p align="center">
+  <img width="600" src="example.svg" alt="Example run of CHPs Scorer">
+</p>
+
 ## Installation
 
 As the scorer has several requirements and is at its heart a funky bash script, it's best to run
