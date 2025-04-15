@@ -36,7 +36,13 @@ check_secrets() {
     local dockerfile=$2
     local found_secrets=0
 
-    echo "Checking for secrets using Trufflehog..." >&2
+    if ! crane manifest --platform linux/amd64 $image > /dev/null 2>&1; then
+        echo "Skipping trufflehog secret check as no linux/amd64 image was found" >&2
+        return 0
+    else 
+        echo "Checking for secrets using Trufflehog..." >&2
+    fi
+
 
     # First try using local Trufflehog if available
     if command -v trufflehog >/dev/null 2>&1; then
