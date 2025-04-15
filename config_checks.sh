@@ -43,7 +43,7 @@ check_secrets() {
         echo "Using local Trufflehog installation..." >&2
 
         # Check Docker image
-        if trufflehog docker --image "$image" --only-verified 2>/dev/null | grep -q "Found"; then
+        if trufflehog docker --detector-timeout=20s --image "$image" --only-verified 2>/dev/null | grep -q "Found"; then
             found_secrets=1
             echo -e "${RED}✗ Trufflehog found verified secrets in the image${NC}" >&2
         fi
