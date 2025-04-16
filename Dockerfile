@@ -1,7 +1,7 @@
 # Copyright 2025 The CHPs-dev Authors
 # SPDX-License-Identifier: Apache-2.0
 
-FROM cgr.dev/chainguard/docker-dind:latest-dev@sha256:fc4a4440ac1833b7b7f0a6ab1120f30004716d3e0cb7ee3e759203b83c0d85c5
+FROM cgr.dev/chainguard/docker-dind:latest-dev@sha256:62a402422e94271e0a5d5ee55b5fe20c5aa76add2f453b74d425ceb2b7774e3c
 
 LABEL org.opencontainers.image.source="https://github.com/chps-dev/chps-scorer"
 
