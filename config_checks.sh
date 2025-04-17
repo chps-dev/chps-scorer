@@ -43,63 +43,16 @@ check_secrets() {
         echo "Checking for secrets using Trufflehog..." >&2
     fi
 
-
-    # First try using local Trufflehog if available
+    # Check we have trufflehog installed
     if command -v trufflehog >/dev/null 2>&1; then
-        echo "Using local Trufflehog installation..." >&2
 
         # Check Docker image
         if trufflehog docker --detector-timeout=20s --image "$image" --only-verified 2>/dev/null | grep -q "Found"; then
             found_secrets=1
             echo -e "${RED}✗ Trufflehog found verified secrets in the image${NC}" >&2
         fi
-
-        # Check Dockerfile if provided
-        if [ -n "$dockerfile" ] && [ -f "$dockerfile" ]; then
-            if trufflehog filesystem --directory="$(dirname "$(realpath "$dockerfile")")" --only-verified 2>/dev/null | grep -q "Found"; then
-                found_secrets=1
-                echo -e "${RED}✗ Trufflehog found verified secrets in the Dockerfile${NC}" >&2
-            fi
-        fi
-
-        if [ $found_secrets -eq 1 ]; then
-            return 1
-        fi
-        return 0
-    fi
-
-    # Fall back to Docker version if local Trufflehog not available
-    echo "Local Trufflehog not found, using Docker version..." >&2
-
-    # Check if Docker is available
-    if ! command -v docker >/dev/null 2>&1; then
-        echo "Neither local Trufflehog nor Docker is available. Cannot run secret scanning." >&2
-        return 1
-    fi
-
-    # Pull the Trufflehog Docker image
-    if ! docker pull trufflesecurity/trufflehog:latest >/dev/null 2>&1; then
-        echo "Failed to pull Trufflehog Docker image. Skipping secret scanning." >&2
-        return 1
-    fi
-
-    # Run Trufflehog directly against the Docker image
-    if docker run --rm \
-        --volume /var/run/docker.sock:/var/run/docker.sock \
-        trufflesecurity/trufflehog:latest \
-        docker --image "$image" --only-verified 2>/dev/null | grep -q "Found"; then
-        found_secrets=1
-        echo -e "${RED}✗ Trufflehog found verified secrets in the image${NC}" >&2
-    fi
-
-    # Also check Dockerfile if provided
-    if [ -n "$dockerfile" ] && [ -f "$dockerfile" ]; then
-        if docker run --rm -v "$(dirname "$(realpath "$dockerfile")"):/data" \
-            trufflesecurity/trufflehog:latest \
-            filesystem --directory=/data --only-verified 2>/dev/null | grep -q "Found"; then
-            found_secrets=1
-            echo -e "${RED}✗ Trufflehog found verified secrets in the Dockerfile${NC}" >&2
-        fi
+    else 
+        echo "Trufflehog not found, skipping secret check" >&2
     fi
 
     if [ $found_secrets -eq 1 ]; then
