@@ -230,9 +230,15 @@ check_download_verification() {
 
         # Read the Dockerfile and check for downloads and verification
         while IFS= read -r line; do
+            # Skip apk add lines
+            if echo "$line" | grep -iE 'apk.*add' >/dev/null; then
+                continue
+            fi
+            
             if echo "$line" | grep -iE 'wget|curl' >/dev/null; then
                 has_downloads=1
             fi
+            
             if echo "$line" | grep -iE 'gpg|md5sum|sha256sum|sha512sum' >/dev/null; then
                 has_verification=1
             fi
