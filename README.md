@@ -1,5 +1,11 @@
 # CHPs Scorer
 
+![Minimalism Badge](https://img.shields.io/badge/minimalism-B-gold?style=flat-square&labelColor=%233443F4&color=%23FFB000)
+![Provenance Badge](https://img.shields.io/badge/provenance-A-gold?style=flat-square&labelColor=%233443F4&color=%2304B45F)
+![Configuration Badge](https://img.shields.io/badge/configuration-A-gold?style=flat-square&labelColor=%233443F4&color=%2304B45F)
+![CVE Badge](https://img.shields.io/badge/cves-B-gold?style=flat-square&labelColor=%233443F4&color=%23FFB000)
+![Overall Badge](https://img.shields.io/badge/overall-B-gold?style=flat-square&labelColor=%233443F4&color=%23FFB000)
+
 This tool implements automated checks for the [CHPs specification](https://github.com/chps-dev/chps).
 
 <p align="center">
@@ -16,6 +22,15 @@ docker run --privileged ghcr.io/chps-dev/chps-scorer:latest <image_to_scan>
 ```
 
 Unfortunately, the `--privileged` is required as we're using docker-in-docker.
+
+## Badges
+
+The script will output markdown at the end for creating badges similar to those at the top of
+this page. You can then include these in your project pages.
+
+In the future we'd like to create a service that automates badge creation similar to
+https://goreportcard.com/. As an interim step, we may look at creating a GitHub Action that updates
+READMEs.
 
 ## Dependencies
 
