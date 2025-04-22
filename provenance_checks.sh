@@ -140,7 +140,7 @@ check_pinned_packages() {
 
         # Check pip install without version pins
         if echo "$line" | grep -E 'pip.*install' >/dev/null; then
-            if ! echo "$line" | grep -E '[=><][0-9]' >/dev/null; then
+            if ! echo "$line" | grep -E '[=><][0-9]' >/dev/null && ! echo "$line" | grep -E 'pip.*install.*-r' >/dev/null; then
                 has_unpinned=1
                 unpinned_packages+="✗ Found unpinned pip packages: $line\n"
             fi
