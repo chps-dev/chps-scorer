@@ -306,45 +306,31 @@ output_text() {
     echo
 
     echo -e "${BOLD}Minimalism Score:${NC} $minimalism_score/4 $(get_grade_color "$minimalism_grade")($minimalism_grade)${NC}"
-    if [[ "$can_show_images" == "true" ]]; then
-        display_badge "$minimalism_badge" "$term_support"
-    else
-        echo "![Minimalism Badge]($minimalism_badge)"
-    fi
-    echo
 
     echo -e "${BOLD}Provenance Score:${NC} $provenance_score/8 $(get_grade_color "$provenance_grade")($provenance_grade)${NC}"
-    if [[ "$can_show_images" == "true" ]]; then
-        display_badge "$provenance_badge" "$term_support"
-    else
-        echo "![Provenance Badge]($provenance_badge)"
-    fi
-    echo
-
     echo -e "${BOLD}Configuration Score:${NC} $config_score/4 $(get_grade_color "$config_grade")($config_grade)${NC}"
-    if [[ "$can_show_images" == "true" ]]; then
-        display_badge "$config_badge" "$term_support"
-    else
-        echo "![Configuration Badge]($config_badge)"
-    fi
-    echo
-
     echo -e "${BOLD}CVE Score:${NC} $cve_score/4 $(get_grade_color "$cve_grade")($cve_grade)${NC}"
-    if [[ "$can_show_images" == "true" ]]; then
-        display_badge "$cve_badge" "$term_support"
-    else
-        echo "![CVE Badge]($cve_badge)"
-    fi
-    echo
+    
 
     echo -e "${BOLD}Overall Score:${NC} $total_score/$max_score ($percentage%)"
     echo -e "${BOLD}Grade:${NC} $(get_grade_color "$grade")$grade${NC}"
+    
+    echo
+
     if [[ "$can_show_images" == "true" ]]; then
+        display_badge "$minimalism_badge" "$term_support"
+        display_badge "$provenance_badge" "$term_support"
+        display_badge "$config_badge" "$term_support"
+        display_badge "$cve_badge" "$term_support"
         display_badge "$overall_badge" "$term_support"
     else
+        echo "![Minimalism Badge]($minimalism_badge)"
+        echo "![Provenance Badge]($provenance_badge)"
+        echo "![Configuration Badge]($config_badge)"
+        echo "![CVE Badge]($cve_badge)"
         echo "![Overall Badge]($overall_badge)"
     fi
-    echo
+    
 }
 
 # Main scoring function
