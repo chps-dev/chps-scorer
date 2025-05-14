@@ -209,17 +209,17 @@ output_json() {
     local cve_json=${14}
 
     # Calculate individual section grades
-    local minimalism_grade=$(get_grade "$minimalism_score" 4)
-    local provenance_grade=$(get_grade "$provenance_score" 8)
-    local config_grade=$(get_grade "$config_score" 4)
-    local cve_grade=$(get_grade "$cve_score" 4)
+    local -r minimalism_grade=$(get_grade "$minimalism_score" 4)
+    local -r provenance_grade=$(get_grade "$provenance_score" 8)
+    local -r config_grade=$(get_grade "$config_score" 4)
+    local -r cve_grade=$(get_grade "$cve_score" 4)
 
     # Generate badge URLs
-    local overall_badge=$(get_badge_url "overall" "$grade")
-    local minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
-    local provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
-    local config_badge=$(get_badge_url "configuration" "$config_grade")
-    local cve_badge=$(get_badge_url "cves" "$cve_grade")
+    local -r overall_badge=$(get_badge_url "overall" "$grade")
+    local -r minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
+    local -r provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
+    local -r config_badge=$(get_badge_url "configuration" "$config_grade")
+    local -r cve_badge=$(get_badge_url "cves" "$cve_grade")
 
     cat << EOF
 {
@@ -280,17 +280,17 @@ output_text() {
     local grade=${10}
     
     # Calculate individual section grades
-    local minimalism_grade=$(get_grade "$minimalism_score" 4)
-    local provenance_grade=$(get_grade "$provenance_score" 8)
-    local config_grade=$(get_grade "$config_score" 4)
-    local cve_grade=$(get_grade "$cve_score" 4)
+    local -r minimalism_grade=$(get_grade "$minimalism_score" 4)
+    local -r provenance_grade=$(get_grade "$provenance_score" 8)
+    local -r config_grade=$(get_grade "$config_score" 4)
+    local -r cve_grade=$(get_grade "$cve_score" 4)
 
     # Generate badge URLs
-    local overall_badge=$(get_badge_url "overall" "$grade")
-    local minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
-    local provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
-    local config_badge=$(get_badge_url "configuration" "$config_grade")
-    local cve_badge=$(get_badge_url "cves" "$cve_grade")
+    local -r overall_badge=$(get_badge_url "overall" "$grade")
+    local -r minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
+    local -r provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
+    local -r config_badge=$(get_badge_url "configuration" "$config_grade")
+    local -r cve_badge=$(get_badge_url "cves" "$cve_grade")
 
     # Check for terminal image support
     local term_support
