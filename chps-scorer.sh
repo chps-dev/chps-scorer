@@ -190,6 +190,111 @@ get_grade_color() {
         *)    echo -e "${NC}";;
     esac
 }
+output_html() {
+    local image=$1
+    local digest=$2
+    local minimalism_score=$3
+    local provenance_score=$4
+    local config_score=$5
+    local cve_score=$6
+    local total_score=$7
+    local max_score=$8
+    local percentage=$9
+    local grade=${10}
+    local minimalism_json=${11}
+    local provenance_json=${12}
+    local config_json=${13}
+    local cve_json=${14}
+
+    # Calculate individual section grades
+    local -r minimalism_grade=$(get_grade "$minimalism_score" 4)
+    local -r provenance_grade=$(get_grade "$provenance_score" 8)
+    local -r config_grade=$(get_grade "$config_score" 4)
+    local -r cve_grade=$(get_grade "$cve_score" 4)
+
+    # Generate badge URLs
+    local -r overall_badge=$(get_badge_url "overall" "$grade")
+    local -r minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
+    local -r provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
+    local -r config_badge=$(get_badge_url "configuration" "$config_grade")
+    local -r cve_badge=$(get_badge_url "cves" "$cve_grade")
+
+    cat << EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHPs Scorer Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .badge { display: inline-block; margin: 5px 0; }
+        .grade { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>CHPs Scorer Report</h1>
+    <p><strong>Image:</strong> $image</p>
+    <p><strong>Digest:</strong> $digest</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Score</th>
+                <th>Max Score</th>
+                <th>Grade</th>
+                <th>Badge</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Minimalism</td>
+                <td>$minimalism_score</td>
+                <td>4</td>
+                <td class="grade">$minimalism_grade</td>
+                <td><img class="badge" src="$minimalism_badge" alt="Minimalism Badge"></td>
+            </tr>
+            <tr>
+                <td>Provenance</td>
+                <td>$provenance_score</td>
+                <td>8</td>
+                <td class="grade">$provenance_grade</td>
+                <td><img class="badge" src="$provenance_badge" alt="Provenance Badge"></td>
+            </tr>
+            <tr>
+                <td>Configuration</td>
+                <td>$config_score</td>
+                <td>4</td>
+                <td class="grade">$config_grade</td>
+                <td><img class="badge" src="$config_badge" alt="Configuration Badge"></td>
+            </tr>
+            <tr>
+                <td>CVE</td>
+                <td>$cve_score</td>
+                <td>4</td>
+                <td class="grade">$cve_grade</td>
+                <td><img class="badge" src="$cve_badge" alt="CVE Badge"></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <th>Overall</th>
+                <th>$total_score</th>
+                <th>$max_score</th>
+                <th class="grade">$grade</th>
+                <th><img class="badge" src="$overall_badge" alt="Overall Badge"></th>
+            </tr>
+        </tfoot>
+    </table>
+    <p><strong>Overall Percentage:</strong> $percentage%</p>
+</body>
+</html>
+EOF
+}
 
 # Function to output scores in JSON format
 output_json() {
@@ -284,22 +389,6 @@ output_text() {
     local -r provenance_grade=$(get_grade "$provenance_score" 8)
     local -r config_grade=$(get_grade "$config_score" 4)
     local -r cve_grade=$(get_grade "$cve_score" 4)
-
-    # Generate badge URLs
-    local -r overall_badge=$(get_badge_url "overall" "$grade")
-    local -r minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
-    local -r provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
-    local -r config_badge=$(get_badge_url "configuration" "$config_grade")
-    local -r cve_badge=$(get_badge_url "cves" "$cve_grade")
-
-    # Check for terminal image support
-    local term_support
-    term_support=$(detect_term_img_support)
-    local can_show_images=false
-    
-    if [[ "$term_support" != "none" ]] && check_curl; then
-        can_show_images=true
-    fi
     
     echo -e "${BOLD}Scoring image:${NC} $image"
     echo -e "${BOLD}Image digest:${NC} $digest"
@@ -317,6 +406,21 @@ output_text() {
     
     echo
 
+    # Generate badge URLs
+    local -r overall_badge=$(get_badge_url "overall" "$grade")
+    local -r minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
+    local -r provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
+    local -r config_badge=$(get_badge_url "configuration" "$config_grade")
+    local -r cve_badge=$(get_badge_url "cves" "$cve_grade")
+
+    # Check for terminal image support
+    local term_support
+    term_support=$(detect_term_img_support)
+    local can_show_images=false
+    
+    if [[ "$term_support" != "none" ]] && check_curl; then
+        can_show_images=true
+    fi
     if [[ "$can_show_images" == "true" ]]; then
         display_badge "$minimalism_badge" "$term_support"
         display_badge "$provenance_badge" "$term_support"
@@ -331,6 +435,33 @@ output_text() {
         echo "![Overall Badge]($overall_badge)"
     fi
     
+}
+
+# Badges only
+output_badges() {
+    local image=$1
+    local digest=$2
+    local minimalism_score=$3
+    local provenance_score=$4
+    local config_score=$5
+    local cve_score=$6
+    local total_score=$7
+    local max_score=$8
+    local percentage=$9
+    local grade=${10}
+
+    # Generate badge URLs
+    local -r overall_badge=$(get_badge_url "overall" "$grade")
+    local -r minimalism_badge=$(get_badge_url "minimalism" "$minimalism_grade")
+    local -r provenance_badge=$(get_badge_url "provenance" "$provenance_grade")
+    local -r config_badge=$(get_badge_url "configuration" "$config_grade")
+    local -r cve_badge=$(get_badge_url "cves" "$cve_grade")
+
+    echo "![Minimalism Badge]($minimalism_badge)"
+    echo "![Provenance Badge]($provenance_badge)"
+    echo "![Configuration Badge]($config_badge)"
+    echo "![CVE Badge]($cve_badge)"
+    echo "![Overall Badge]($overall_badge)"
 }
 
 # Main scoring function
@@ -393,9 +524,15 @@ score_image() {
         text)
             output_text "$ORIGINAL_IMAGE" "$image" "$minimalism_score" "$provenance_score" "$config_score" "$cve_score" "$total_score" "$max_score" "$percentage" "$grade"
             ;;
+        html)
+            output_html "$ORIGINAL_IMAGE" "$image" "$minimalism_score" "$provenance_score" "$config_score" "$cve_score" "$total_score" "$max_score" "$percentage" "$grade" "$minimalism_json" "$provenance_json" "$config_json" "$cve_json"
+            ;;
+        badges)
+            output_badges "$ORIGINAL_IMAGE" "$image" "$minimalism_score" "$provenance_score" "$config_score" "$cve_score" "$total_score" "$max_score" "$percentage" "$grade"
+            ;;
         *)
             echo "Error: Unknown output format '$OUTPUT_FORMAT'" >&2
-            echo "Supported formats: text (default), json" >&2
+            echo "Supported formats: text (default), json, html, badges" >&2
             exit 1
             ;;
     esac
