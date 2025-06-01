@@ -4,7 +4,27 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # CHPs Scorer - Container Hardening Priorities Scoring Tool
-# This script evaluates Docker images against the CHPs criteria
+# This script evaluates OCI container images against the CHPs criteria
+
+# Displays help
+display_help() {
+    echo "CHPs Scorer"
+    echo
+    echo "Container Hardening Priorities Scoring Tool evaluates OCI container images"
+    echo "against the Container Hardening Priorities (CHPs) criteria."
+    echo
+    echo "CHPs home page:       https://github.com/chps-dev/chps"
+    echo "Project home page:    https://github.com/chps-dev/chps-scorer"
+    echo
+    echo "Usage:"
+    echo "  $0 [options] <image>"
+    echo
+    echo "Options:"
+    echo "  --skip-cves             Skip CVE checks, defaults to false"
+    echo "  --dockerfile <path>     Use Dockerfile for additional checks"
+    echo "  -o, --output <format>   Set output format: text (default), json, html, badges"
+    echo "  -h, --help              Display this help message and exit"
+}
 
 # Colors for output
 RED='\033[0;31m'
@@ -73,6 +93,10 @@ while [[ $# -gt 0 ]]; do
             OUTPUT_FORMAT="$2"
             shift 2
             ;;
+        -h|--help)
+            display_help
+            exit 0
+            ;;
         *)
             break
             ;;
@@ -81,8 +105,7 @@ done
 
 # Check if image name is provided
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 [--skip-cves] [--dockerfile <path>] [-o|--output <format>] <docker-image-name>" >&2
-    echo "Output formats: text (default), json" >&2
+    display_help
     exit 1
 fi
 
