@@ -4,7 +4,28 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # CHPs Scorer - Container Hardening Priorities Scoring Tool
-# This script evaluates Docker images against the CHPs criteria
+# This script evaluates OCI container images against the CHPs criteria
+
+# Displays help
+display_help() {
+    echo "CHPs Scorer"
+    echo
+    echo "Container Hardening Priorities Scoring Tool evaluates OCI container images"
+    echo "against the Container Hardening Priorities (CHPs) criteria."
+    echo
+    echo "CHPs home page:       https://github.com/chps-dev/chps"
+    echo "Project home page:    https://github.com/chps-dev/chps-scorer"
+    echo
+    echo "Usage:"
+    echo "  $0 [options] <image>"
+    echo
+    echo "Options:"
+    echo "  --skip-cves             Skip CVE checks, defaults to false"
+    echo "  --dockerfile <path>     Use Dockerfile for additional checks"
+    echo "  -o, --output <format>   Set output format: text (default), json, html, badges"
+    echo "  --local                 Use local image instead of pulling from registry"
+    echo "  -h, --help              Display this help message and exit"
+}
 
 # Colors for output
 RED='\033[0;31m'
@@ -59,6 +80,7 @@ command_exists() {
 SKIP_CVES=false
 DOCKERFILE=""
 OUTPUT_FORMAT="text"
+USE_LOCAL_IMAGE=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --skip-cves)
@@ -73,6 +95,14 @@ while [[ $# -gt 0 ]]; do
             OUTPUT_FORMAT="$2"
             shift 2
             ;;
+        -h|--help)
+            display_help
+            exit 0
+            ;;
+        --local)
+            USE_LOCAL_IMAGE=true
+            shift
+            ;;
         *)
             break
             ;;
@@ -81,8 +111,7 @@ done
 
 # Check if image name is provided
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 [--skip-cves] [--dockerfile <path>] [-o|--output <format>] <docker-image-name>" >&2
-    echo "Output formats: text (default), json" >&2
+    display_help
     exit 1
 fi
 
@@ -550,21 +579,32 @@ if [ -n "$DOCKERFILE" ] && [ ! -f "$DOCKERFILE" ]; then
     exit 1
 fi
 
-echo "Pulling image: $1" >&2
 
-if ! docker pull "$1" > /dev/null 2>&1; then
-    echo "Error: Failed to pull image" >&2
-    exit 1
+# Pull image or use a local one
+#
+# Note that local images do not have a repo digest.
+if [ "$USE_LOCAL_IMAGE" == "true" ]; then
+    echo "Using local image: $1"
+    # local images do not have digest like remote, but instead they have Id
+    IMAGE_WITH_DIGEST=$(docker inspect "$1" --format '{{.Id}}')
+else
+    echo "Pulling image: $1" >&2
+
+    if ! docker pull "$1" > /dev/null 2>&1; then
+        echo "Error: Failed to pull image" >&2
+        exit 1
+    fi
+
+    # Get the full image name with digest
+    IMAGE_WITH_DIGEST=$(docker inspect "$1" --format '{{.RepoDigests}}' 2>/dev/null | tr -d '[]' | cut -d' ' -f1)
 fi
 
-ORIGINAL_IMAGE="$1"
-
-# Get the full image name with digest
-IMAGE_WITH_DIGEST=$(docker inspect "$1" --format '{{.RepoDigests}}' 2>/dev/null | tr -d '[]' | cut -d' ' -f1)
 if [ -z "$IMAGE_WITH_DIGEST" ]; then
     echo "Warning: Could not get image digest, using original image name" >&2
     IMAGE_WITH_DIGEST="$1"
 fi
+
+ORIGINAL_IMAGE="$1"
 
 # Run the scoring with the full image name including digest
 score_image "$IMAGE_WITH_DIGEST" "$DOCKERFILE"
