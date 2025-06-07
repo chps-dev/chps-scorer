@@ -29,8 +29,11 @@ The script will output markdown at the end for creating badges similar to those 
 this page. You can then include these in your project pages.
 
 In the future we'd like to create a service that automates badge creation similar to
-https://goreportcard.com/. As an interim step, we may look at creating a GitHub Action that updates
-READMEs.
+https://goreportcard.com/ or create an online score card like [OpenSSF Scorecard](https://github.com/ossf/scorecard). 
+
+## CHPs Scorer GitHub Action
+
+Checkout the [CHPs Scorer GitHub Action](https://github.com/chps-dev/chps-scorer-github-action/) to automatically generate CHPs scores for your container and create GitHub issues to triage issues effectively. 
 
 ## Dependencies
 
