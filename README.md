@@ -61,6 +61,7 @@ Options:
 - `-o json`: Output results in JSON format
 - `--skip-cves`: Skip CVE scanning
 - `-d <dockerfile>`: Provide a Dockerfile for additional checks
+- `--local`: Use local image instead of pulling from registry
 
 Example:
 ```bash
@@ -72,6 +73,9 @@ Example:
 
 # With Dockerfile for additional checks
 ./chps-scorer.sh -d Dockerfile myapp:latest
+
+# Using a local image
+./chps-scorer.sh --local myapp:latest
 ```
 
 ## Scoring System
