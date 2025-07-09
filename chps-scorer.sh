@@ -21,7 +21,7 @@ display_help() {
     echo
     echo "Options:"
     echo "  --skip-cves             Skip CVE checks, defaults to false"
-    echo "  --dockerfile <path>     Use Dockerfile for additional checks"
+    echo "  -d, --dockerfile <path> Use Dockerfile for additional checks"
     echo "  -o, --output <format>   Set output format: text (default), json, html, badges"
     echo "  --local                 Use local image instead of pulling from registry"
     echo "  -h, --help              Display this help message and exit"
@@ -87,7 +87,7 @@ while [[ $# -gt 0 ]]; do
             SKIP_CVES=true
             shift
             ;;
-        --dockerfile)
+        -d|--dockerfile)
             DOCKERFILE="$2"
             shift 2
             ;;
