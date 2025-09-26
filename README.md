@@ -27,7 +27,7 @@ For scoring a local container, use the following command to mount the container 
 docker run --rm --privileged \
 --volume /var/run/docker.sock:/var/run/docker.sock \
 ghcr.io/chps-dev/chps-scorer:latest \
-<image_to_scan>
+--local <image_to_scan>
 ```
 
 Unfortunately, the `--privileged` is required as we're using docker-in-docker.
