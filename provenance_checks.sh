@@ -34,6 +34,7 @@ check_image_is_signed() {
 # Function to check for SBOM
 check_sbom() {
     local image=$1
+    local use_local_image=$2
     local has_sbom=0
 
     # Check for Cosign SBOM attestations
@@ -59,9 +60,12 @@ check_sbom() {
             has_sbom=1
         fi
     fi
-
+    
     if [ $has_sbom -eq 0 ]; then
-        if [ "$(docker buildx imagetools inspect --format '{{ json .SBOM.SPDX }}' "$image")" != "null" ]; then
+        # If local image is provided, prevent docker from reaching out to remote registry
+        if [ ! "$use_local_image" = "false" ]; then
+            has_sbom=0
+        elif [ "$(docker buildx imagetools inspect --format '{{ json .SBOM.SPDX }}' "$image")" != "null" ]; then
             has_sbom=1
             # if it's a multi-arch image, let's assume there is a linux/amd64 SBOM
         elif [ docker buildx imagetools inspect --format '{{ json (index .SBOM "linux/amd64").SPDX }}' "$image" > /dev/null 2>&1 ]; then
@@ -175,6 +179,7 @@ check_pinned_packages() {
 # Function to check for provenance attestations
 check_attestations() {
     local image=$1
+    local use_local_image=$2
     local has_attestations=0
 
     # Check for Cosign attestations
@@ -202,7 +207,10 @@ check_attestations() {
     fi
 
     if [ $has_attestations -eq 0 ]; then
-        if [ "$(docker buildx imagetools inspect --format '{{ json .Provenance.SLSA }}' "$image")" != "null" ]; then
+        # If local image is provided, prevent docker from reaching out to remote registry
+        if [ ! "$use_local_image" = "false" ]; then
+            has_attestations=0
+        elif [ "$(docker buildx imagetools inspect --format '{{ json .Provenance.SLSA }}' "$image")" != "null" ]; then
             has_attestations=1
             # if it's a multi-arch image, let's assume there is linux/amd64
         elif [ "$(docker buildx imagetools inspect --format '{{ json (index .Provenance "linux/amd64").SLSA }}' "$image")" != "null" ]; then
@@ -427,6 +435,7 @@ check_recent_build() {
 run_provenance_checks() {
     local image=$1
     local dockerfile=$2
+    local use_local_image=$3
     local provenance_score=0
     local results=()
 
@@ -496,7 +505,7 @@ run_provenance_checks() {
         fi
     fi
 
-    if check_attestations "$image"; then
+    if check_attestations "$image" "$use_local_image"; then
         echo -e "${GREEN}✓ Has provenance attestations (Level 3)${NC}" >&2
         ((provenance_score++))
         results+=("attestations:pass")
@@ -505,7 +514,7 @@ run_provenance_checks() {
         results+=("attestations:fail")
     fi
 
-    if check_sbom "$image"; then
+    if check_sbom "$image" "$use_local_image"; then
         echo -e "${GREEN}✓ Has SBOM (Level 3)${NC}" >&2
         ((provenance_score++))
         results+=("sbom:pass")
