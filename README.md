@@ -17,8 +17,17 @@ This tool implements automated checks for the [CHPs specification](https://githu
 As the scorer has several requirements and is at its heart a funky bash script, it's best to run
 using the container image i.e:
 
+```bash
+docker run --rm --privileged ghcr.io/chps-dev/chps-scorer:latest <image_to_scan>
 ```
-docker run --privileged ghcr.io/chps-dev/chps-scorer:latest <image_to_scan>
+
+For scoring a local container, use the following command to mount the container engine socket from the host into the chps-scorer container:
+
+```bash
+docker run --rm --privileged \
+--volume /var/run/docker.sock:/var/run/docker.sock \
+ghcr.io/chps-dev/chps-scorer:latest \
+--local <image_to_scan>
 ```
 
 Unfortunately, the `--privileged` is required as we're using docker-in-docker.
@@ -61,6 +70,7 @@ Options:
 - `-o json`: Output results in JSON format
 - `--skip-cves`: Skip CVE scanning
 - `-d <dockerfile>`: Provide a Dockerfile for additional checks
+- `--local`: Use a local image
 
 Example:
 ```bash
@@ -72,6 +82,9 @@ Example:
 
 # With Dockerfile for additional checks
 ./chps-scorer.sh -d Dockerfile myapp:latest
+
+# Locally available image
+./chps-scorer.sh --local myapp:latest
 ```
 
 ## Scoring System

@@ -64,6 +64,7 @@ check_build_tooling() {
 check_minimal_base() {
     local image=$1
     local dockerfile=$2
+    local use_local_image=$3
 
     # If Dockerfile is provided, check the final FROM statement (normally production build)
     if [ -n "$dockerfile" ]; then
@@ -80,7 +81,12 @@ check_minimal_base() {
         x86_64) arch="amd64" ;;
         aarch64) arch="arm64" ;;
     esac
-    local size_bytes=$(crane manifest --platform linux/${arch} "$image" | jq '.config.size + ([.layers[].size] | add)')
+    # If local image is provided, use docker to prevent crane from reaching out to remote registry
+    if [ ! "$use_local_image" = "false" ]; then
+        local size_bytes=$(docker image inspect --platform linux/${arch} "$image" --format '{{.Size}}')
+    else
+        local size_bytes=$(crane manifest --platform linux/${arch} "$image" | jq '.config.size + ([.layers[].size] | add)') 
+    fi
 
     if [ "$size_bytes" -lt 40000000 ]; then
         echo "Compressed image is $size_bytes bytes, assuming minimal base image" >&2
@@ -93,12 +99,13 @@ check_minimal_base() {
 run_minimalism_checks() {
     local image=$1
     local dockerfile=$2
+    local use_local_image=$3
     local minimalism_score=0
     local results=()
 
     echo -e "\nChecking Minimalism criteria..." >&2
 
-    if check_minimal_base "$image" "$dockerfile"; then
+    if check_minimal_base "$image" "$dockerfile" "$use_local_image"; then
         echo -e "${GREEN}✓ Using minimal base image (compressed image <40MB) (Level 1)${NC}" >&2
         ((minimalism_score++))
         results+=("minimal_base:pass")
