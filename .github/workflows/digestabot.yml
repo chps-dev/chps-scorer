@@ -20,13 +20,13 @@ jobs:
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-    - uses: octo-sts/action@6177b4481c00308b3839969c3eca88c96a91775f # v1.0.0
+    - uses: octo-sts/action@a26b0c6455c7f13316f29a8766287f939e75f6c8 # v1.0.2
       id: octo-sts
       with:
         scope: ${{ github.repository }}
         identity: digestabot
 
-    - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
+    - uses: chainguard-dev/digestabot@a3b776c1ca57d3127c85578cde8fef6eed3c75d3 # v1.2.3
       with:
         token: ${{ steps.octo-sts.outputs.token }}
         author: "octo-sts[bot] <157150467+octo-sts[bot]@users.noreply.github.com>"
