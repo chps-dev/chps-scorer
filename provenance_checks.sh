@@ -59,7 +59,7 @@ check_sbom() {
             has_sbom=1
         fi
     fi
-
+    
     if [ $has_sbom -eq 0 ]; then
         if [ "$(docker buildx imagetools inspect --format '{{ json .SBOM.SPDX }}' "$image")" != "null" ]; then
             has_sbom=1
@@ -427,6 +427,7 @@ check_recent_build() {
 run_provenance_checks() {
     local image=$1
     local dockerfile=$2
+    local use_local_image=$3
     local provenance_score=0
     local results=()
 
@@ -450,13 +451,21 @@ run_provenance_checks() {
         results+=("download_verification:fail")
     fi
 
-    if check_image_is_signed "$image"; then
-        echo -e "${GREEN}✓ Image is signed (Level 2)${NC}" >&2
+    if [ ! "$use_local_image" = "false" ]; then
+        # Skip remote checks but still increment score
+        echo -e "${YELLOW}✓ Local image provided, skipping signature check${NC}" >&2
+
         ((provenance_score++))
         results+=("image_signed:pass")
-    else
-        echo -e "${RED}✗ Image is not signed${NC}" >&2
-        results+=("image_signed:fail")
+    else 
+        if check_image_is_signed "$image"; then
+            echo -e "${GREEN}✓ Image is signed (Level 2)${NC}" >&2
+            ((provenance_score++))
+            results+=("image_signed:pass")
+        else
+            echo -e "${RED}✗ Image is not signed${NC}" >&2
+            results+=("image_signed:fail")
+        fi
     fi
 
     if check_recent_build "$image"; then
@@ -496,22 +505,38 @@ run_provenance_checks() {
         fi
     fi
 
-    if check_attestations "$image"; then
-        echo -e "${GREEN}✓ Has provenance attestations (Level 3)${NC}" >&2
+    if [ ! "$use_local_image" = "false" ]; then
+        # Skip remote checks but still increment score
+        echo -e "${YELLOW}✓ Local image provided, skipping SLSA provenance attestations check${NC}" >&2
+
         ((provenance_score++))
         results+=("attestations:pass")
-    else
-        echo -e "${RED}✗ No provenance attestations${NC}" >&2
-        results+=("attestations:fail")
+    else 
+        if check_attestations "$image" "$use_local_image"; then
+            echo -e "${GREEN}✓ Has provenance attestations (Level 3)${NC}" >&2
+            ((provenance_score++))
+            results+=("attestations:pass")
+        else
+            echo -e "${RED}✗ No provenance attestations${NC}" >&2
+            results+=("attestations:fail")
+        fi
     fi
 
-    if check_sbom "$image"; then
-        echo -e "${GREEN}✓ Has SBOM (Level 3)${NC}" >&2
+    if [ ! "$use_local_image" = "false" ]; then
+        # Skip remote checks but still increment score
+        echo -e "${YELLOW}✓ Local image provided, skipping SBOM attestations check${NC}" >&2
+
         ((provenance_score++))
         results+=("sbom:pass")
-    else
-        echo -e "${RED}✗ No SBOM${NC}" >&2
-        results+=("sbom:fail")
+    else 
+        if check_sbom "$image" "$use_local_image"; then
+            echo -e "${GREEN}✓ Has SBOM (Level 3)${NC}" >&2
+            ((provenance_score++))
+            results+=("sbom:pass")
+        else
+            echo -e "${RED}✗ No SBOM${NC}" >&2
+            results+=("sbom:fail")
+        fi
     fi
 
     # Output JSON

@@ -497,6 +497,7 @@ output_badges() {
 score_image() {
     local image=$1
     local dockerfile=$2
+    local use_local_image=$3
 
     echo "Scoring image: $image" >&2
     if [ -n "$dockerfile" ]; then
@@ -505,11 +506,11 @@ score_image() {
     echo "----------------------------------------" >&2
 
     # Run minimalism checks
-    minimalism_json=$(run_minimalism_checks "$image" "$dockerfile")
+    minimalism_json=$(run_minimalism_checks "$image" "$dockerfile" "$use_local_image")
     minimalism_score=$(echo "$minimalism_json" | jq -r '.score')
 
     # Run provenance checks
-    provenance_json=$(run_provenance_checks "$image" "$dockerfile")
+    provenance_json=$(run_provenance_checks "$image" "$dockerfile" "$use_local_image")
     provenance_score=$(echo "$provenance_json" | jq -r '.score')
 
     # Run configuration checks
@@ -586,7 +587,11 @@ fi
 if [ "$USE_LOCAL_IMAGE" == "true" ]; then
     echo "Using local image: $1"
     # local images do not have digest like remote, but instead they have Id
-    IMAGE_WITH_DIGEST=$(docker inspect "$1" --format '{{.Id}}')
+    if [ -n "$(docker inspect "$1" --format '{{.Id}}')" ]; then
+        IMAGE_WITH_DIGEST=$(docker inspect "$1" --format '{{.Id}}')
+    else
+        exit 1
+    fi
 else
     echo "Pulling image: $1" >&2
 
@@ -607,4 +612,4 @@ fi
 ORIGINAL_IMAGE="$1"
 
 # Run the scoring with the full image name including digest
-score_image "$IMAGE_WITH_DIGEST" "$DOCKERFILE"
+score_image "$IMAGE_WITH_DIGEST" "$DOCKERFILE" "$USE_LOCAL_IMAGE"
