@@ -58,7 +58,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
       -
         name: Attest
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v1
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v1
         id: attest
         with:
           subject-name: ghcr.io/chps-dev/chps-scorer
